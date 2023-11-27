@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def read_csv_in_data_frame(path: str) -> pd.core.frame.DataFrame:
@@ -37,12 +38,16 @@ if __name__ == '__main__':
     df = read_csv_in_data_frame(path)
     df = delete_none(df)
     df = count_word(df)
-    print(df.head())
-    print('----')
-    print(df.describe())
-    ab = filter_by_words(df, 1600)
-    print(ab)
-    cd = filter_by_rating(df, 3)
-    print(cd)
+    # print(df.loc[df['count_word'] == 6])
+    # print(df.head())
+    # print('----')
+    # print(df.describe())
+    # ab = filter_by_words(df, 1600)
+    # print(ab)
+    # cd = filter_by_rating(df, 3)
+    # print(cd)
+    print('------')
+    a = df.groupby('rating').agg({'count_word': ['min', 'max', 'mean']})
+    print(a)
     # stats_rating = df['rating'].describe()
     # str = df.loc[df['count_word'] == 8]
