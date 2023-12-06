@@ -1,5 +1,22 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+from typing import List
+from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+from nltk.corpus import stopwords
+from pymorphy2 import MorphAnalyzer
+import re
+import nltk
+from pymorphy3 import MorphAnalyzer
+from nltk.corpus import stopwords
+from collections import defaultdict
+
+
+patterns = "[«»A-Za-z0-9!#$%&'()*+,./:;<=>?@[\]^_`{|}~—\"\-]+"
+stopwords_ru = stopwords.words("russian")
+morph = MorphAnalyzer()
 
 
 def read_csv_in_data_frame(path: str) -> pd.core.frame.DataFrame:
@@ -33,11 +50,47 @@ def filter_by_rating(df: pd.core.frame.DataFrame, count_rating: int) -> pd.core.
     return df[df.rating == count_rating]
 
 
+def lemmatize(review: str) -> List[str]:
+    review = re.sub(patterns, ' ', review)
+    tokens = nltk.word_tokenize(review.lower())
+    preprocessed_text = []
+    for token in tokens:
+        lemma = morph.parse(token)[0].normal_form
+        if lemma not in stopwords_ru:
+            preprocessed_text.append(lemma)
+    print(type(lemma))
+    return preprocessed_text
+
+
+def most_popular_words(df: pd.core.frame.DataFrame, rating: int) -> List[tuple[str, int]]:
+    data = df[df['rating'] == rating]['review'].apply(lemmatize)
+    words = Counter()
+    for txt in data:
+        words.update(txt)
+    return words.most_common(10)
+
+
+def graph_build(hist_list: List[tuple[str, int]]) -> None:
+    words = []
+    count = []
+    for i in range(len(hist_list)):
+        words.append(hist_list[i][0])
+        count.append(hist_list[i][1])
+
+    fig, ax = plt.subplots()
+
+    ax.bar(words, count)
+    ax.set_ylabel('Количество')
+    ax.set_title('Гистограмма самых популярных слов')
+    plt.show()
+
+
 if __name__ == '__main__':
     path = r"C:\Users\natal\lab_2_python\annotation1.csv"
     df = read_csv_in_data_frame(path)
-    df = delete_none(df)
     df = count_word(df)
+    graph_build(most_popular_words(df, 3))
+
     # print(df.loc[df['count_word'] == 6])
     # print(df.head())
     # print('----')
@@ -46,8 +99,15 @@ if __name__ == '__main__':
     # print(ab)
     # cd = filter_by_rating(df, 3)
     # print(cd)
-    print('------')
-    a = df.groupby('rating').agg({'count_word': ['min', 'max', 'mean']})
-    print(a)
+    # print('------')
+    # a = df.groupby('rating').agg({'count_word': ['min', 'max', 'mean']})
+    # print(a)
     # stats_rating = df['rating'].describe()
     # str = df.loc[df['count_word'] == 8]
+    # data = df[df['rating'] == 1]['review'].apply(lemmatize)
+    # word_freq = defaultdict(int)
+    # for tokens in data.iloc[:]:
+    #     for token in tokens:
+    #         word_freq[token] += 1
+    # print(len(word_freq))
+    # print(sorted(word_freq, key=word_freq.get, reverse=True)[:10])
